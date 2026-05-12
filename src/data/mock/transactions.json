@@ -1,0 +1,200 @@
+[
+  {
+    "id": "trx-001",
+    "clientId": "client-001",
+    "skuId": "sku-001",
+    "type": "inbound",
+    "qty": 500,
+    "fee": 100000,
+    "status": "shipped",
+    "date": "2025-05-02",
+    "notes": "Batch penerimaan awal bulan"
+  },
+  {
+    "id": "trx-002",
+    "clientId": "client-001",
+    "skuId": "sku-002",
+    "type": "inbound",
+    "qty": 200,
+    "fee": 100000,
+    "status": "shipped",
+    "date": "2025-05-03",
+    "notes": "Restock buku SMP"
+  },
+  {
+    "id": "trx-003",
+    "clientId": "client-001",
+    "skuId": "sku-001",
+    "type": "outbound",
+    "qty": 120,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-05-04",
+    "notes": "Order ke SDN 1 Surabaya"
+  },
+  {
+    "id": "trx-004",
+    "clientId": "client-001",
+    "skuId": "sku-002",
+    "type": "outbound",
+    "qty": 80,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-05-05",
+    "notes": "Order ke SMPN 3 Malang"
+  },
+  {
+    "id": "trx-005",
+    "clientId": "client-001",
+    "skuId": "sku-003",
+    "type": "outbound",
+    "qty": 30,
+    "fee": 2500,
+    "status": "picking",
+    "date": "2025-05-10",
+    "notes": "Order marketplace Tokopedia"
+  },
+  {
+    "id": "trx-006",
+    "clientId": "client-001",
+    "skuId": "sku-002",
+    "type": "return",
+    "qty": 15,
+    "fee": 2000,
+    "status": "shipped",
+    "date": "2025-05-06",
+    "notes": "Retur dari SMPN 5 Surabaya - buku rusak"
+  },
+  {
+    "id": "trx-007",
+    "clientId": "client-003",
+    "skuId": "sku-006",
+    "type": "inbound",
+    "qty": 300,
+    "fee": 100000,
+    "status": "shipped",
+    "date": "2025-05-01",
+    "notes": "Batch buku SMA awal semester"
+  },
+  {
+    "id": "trx-008",
+    "clientId": "client-003",
+    "skuId": "sku-006",
+    "type": "outbound",
+    "qty": 200,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-05-07",
+    "notes": "Distribusi ke SMAN 2 Kediri"
+  },
+  {
+    "id": "trx-009",
+    "clientId": "client-003",
+    "skuId": "sku-007",
+    "type": "outbound",
+    "qty": 150,
+    "fee": 2500,
+    "status": "packing",
+    "date": "2025-05-10",
+    "notes": "Order sekolah Jombang"
+  },
+  {
+    "id": "trx-010",
+    "clientId": "client-003",
+    "skuId": "sku-008",
+    "type": "expired",
+    "qty": 20,
+    "fee": 2000,
+    "status": "shipped",
+    "date": "2025-05-08",
+    "notes": "Modul digital versi lama - dimusnahkan"
+  },
+  {
+    "id": "trx-011",
+    "clientId": "client-004",
+    "skuId": "sku-009",
+    "type": "inbound",
+    "qty": 400,
+    "fee": 100000,
+    "status": "shipped",
+    "date": "2025-05-02",
+    "notes": "Batch buku TK semester baru"
+  },
+  {
+    "id": "trx-012",
+    "clientId": "client-004",
+    "skuId": "sku-009",
+    "type": "outbound",
+    "qty": 250,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-05-08",
+    "notes": "Distribusi ke TK se-Jombang"
+  },
+  {
+    "id": "trx-013",
+    "clientId": "client-004",
+    "skuId": "sku-010",
+    "type": "withdrawal",
+    "qty": 10,
+    "fee": 500,
+    "status": "shipped",
+    "date": "2025-05-09",
+    "notes": "Penarikan stok crayon untuk pameran"
+  },
+  {
+    "id": "trx-014",
+    "clientId": "client-001",
+    "skuId": "sku-001",
+    "type": "outbound",
+    "qty": 90,
+    "fee": 2500,
+    "status": "pending",
+    "date": "2025-05-10",
+    "notes": "Order baru masuk"
+  },
+  {
+    "id": "trx-015",
+    "clientId": "client-003",
+    "skuId": "sku-006",
+    "type": "outbound",
+    "qty": 180,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-04-15",
+    "notes": "Distribusi April - SMAN Jatim"
+  },
+  {
+    "id": "trx-016",
+    "clientId": "client-001",
+    "skuId": "sku-001",
+    "type": "outbound",
+    "qty": 300,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-04-10",
+    "notes": "Distribusi April - SD Surabaya"
+  },
+  {
+    "id": "trx-017",
+    "clientId": "client-001",
+    "skuId": "sku-002",
+    "type": "inbound",
+    "qty": 400,
+    "fee": 100000,
+    "status": "shipped",
+    "date": "2025-04-05",
+    "notes": "Restock April buku SMP"
+  },
+  {
+    "id": "trx-018",
+    "clientId": "client-004",
+    "skuId": "sku-009",
+    "type": "outbound",
+    "qty": 180,
+    "fee": 2500,
+    "status": "shipped",
+    "date": "2025-04-20",
+    "notes": "Distribusi April TK Jombang"
+  }
+]
