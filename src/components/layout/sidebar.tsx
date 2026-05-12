@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   FileText,
+  FlaskConical,
   LayoutDashboard,
   Map,
   Package,
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { href: "/clients", label: "Klien", icon: Users },
   { href: "/inventory", label: "Inventori", icon: Package },
   { href: "/warehouse", label: "Peta Gudang", icon: Map },
+  { href: "/simulation", label: "Simulasi", icon: FlaskConical },
   { href: "/billing", label: "Billing", icon: FileText },
 ]
 
