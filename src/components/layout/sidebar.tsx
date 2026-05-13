@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  ClipboardList,
   FileText,
   FlaskConical,
   LayoutDashboard,
@@ -22,6 +23,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/fulfillment", label: "Fulfillment", icon: ClipboardList },
   { href: "/clients", label: "Klien", icon: Users },
   { href: "/inventory", label: "Inventori", icon: Package },
   { href: "/warehouse", label: "Peta Gudang", icon: Map },

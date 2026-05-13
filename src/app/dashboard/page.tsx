@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 import {
   Activity,
   ArrowRight,
@@ -14,6 +16,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react"
+import Link from "next/link"
 import {
   Bar,
   BarChart,
@@ -39,7 +42,7 @@ import {
 } from "@/lib/badge-styles"
 import { formatDate, formatNumber, formatRupiah, formatShortRupiah } from "@/lib/utils"
 import { diffDays, DEAD_STOCK_PENALTY_DAYS, getDeadStockAlerts } from "@/lib/billing-engine"
-import type { BillingItem, Client, Pallet, SKU, Transaction, WarehouseConfig } from "@/types"
+import type { BillingItem, Client, InboundRecord, OutboundRecord, ReturnRecord, WithdrawalRecord, ExpiredRecord, Pallet, SKU, Transaction, WarehouseConfig } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -78,12 +81,70 @@ const revenueChartData = (() => {
   ]
 })()
 
+type LiveTransaction = {
+  id: string
+  date: string
+  clientName: string
+  skuName: string
+  type: string
+  qty: number
+  status: string
+}
+
 export default function DashboardPage() {
+  const today = new Date().toISOString().split("T")[0]
+  const currentMonth = today.slice(0, 7) // YYYY-MM
+
+  const [flowData, setFlowData] = useState({
+    barangMasuk: 0,
+    picking: 0,
+    packing: 0,
+    siapKirim: 0,
+  })
+  const [liveTransactions, setLiveTransactions] = useState<LiveTransaction[]>([])
+  const [liveMonthlyCount, setLiveMonthlyCount] = useState(0)
+
+  useEffect(() => {
+    const parseLS = (key: string): unknown[] => {
+      try { return JSON.parse(localStorage.getItem(key) ?? "[]") as unknown[] }
+      catch { return [] }
+    }
+
+    const inbound    = parseLS("ff_inbound") as InboundRecord[]
+    const outbound   = parseLS("ff_outbound") as OutboundRecord[]
+    const ret        = parseLS("ff_return") as ReturnRecord[]
+    const withdrawal = parseLS("ff_withdrawal") as WithdrawalRecord[]
+    const expired    = parseLS("ff_expired") as ExpiredRecord[]
+
+
+    // Operational flow — counts for today
+    setFlowData({
+      barangMasuk: inbound.filter((r) => r.receivedAt === today).length,
+      picking:     outbound.filter((r) => r.status === "picking").length,
+      packing:     outbound.filter((r) => r.status === "packing").length,
+      siapKirim:   outbound.filter((r) => r.status === "siap_kirim").length,
+    })
+
+    // Merge all records into unified shape
+    const all: LiveTransaction[] = [
+      ...inbound.map((r) => ({ id: r.id, date: r.receivedAt, clientName: r.clientName, skuName: r.skuName, type: "inbound", qty: r.qtyUnit, status: r.status })),
+      ...outbound.map((r) => ({ id: r.id, date: r.createdAt, clientName: r.clientName, skuName: r.skuName, type: "outbound", qty: r.qty, status: r.status })),
+      ...ret.map((r) => ({ id: r.id, date: r.createdAt, clientName: r.clientName, skuName: r.skuName, type: "return", qty: r.qtyReturned, status: r.status })),
+      ...withdrawal.map((r) => ({ id: r.id, date: r.requestedAt, clientName: r.clientName, skuName: r.skuName, type: "withdrawal", qty: r.qtyUnit, status: r.status })),
+      ...expired.map((r) => ({ id: r.id, date: r.handledAt, clientName: r.clientName, skuName: r.skuName, type: "expired", qty: r.qty, status: r.status })),
+    ]
+
+    // Monthly count
+    setLiveMonthlyCount(all.filter((r) => r.date.startsWith(currentMonth)).length)
+
+    // Recent 5 sorted by date desc
+    setLiveTransactions(
+      all.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5)
+    )
+  }, [today, currentMonth])
+
   const activeClients = clients.filter((client) => client.status === "active")
   const criticalSkus = skus.filter((sku) => sku.status === "kritis")
-  const monthlyTransactions = transactions.filter((transaction) =>
-    transaction.date.startsWith("2025-05")
-  )
   const monthlyRevenue = billingItems
     .filter((item) => item.billingMonth === "2025-05")
     .reduce((total, item) => total + item.totalFee, 0)
@@ -95,16 +156,10 @@ export default function DashboardPage() {
       return weight[left.status] - weight[right.status]
     })
 
-  const recentTransactions = [...transactions]
-    .sort((left, right) => right.date.localeCompare(left.date))
-    .slice(0, 5)
-
-  const clientMap = new Map(clients.map((client) => [client.id, client.name]))
-  const skuMap = new Map(skus.map((sku) => [sku.id, sku.name]))
-
   // Dead stock pallet alerts
   const rateMap = new Map(clients.map((c) => [c.id, c.ratePerM2]))
   const deadStockAlerts = getDeadStockAlerts(pallets, "2025-05-10", rateMap).slice(0, 5)
+  const clientMap = new Map(clients.map((c) => [c.id, c.name]))
 
   const stats = [
     {
@@ -125,8 +180,8 @@ export default function DashboardPage() {
     },
     {
       label: "Transaksi Bulan Ini",
-      value: formatNumber(monthlyTransactions.length),
-      description: "Aktivitas inbound, outbound, retur, dan withdrawal",
+      value: formatNumber(liveMonthlyCount),
+      description: "Aktivitas dari Fulfillment Operations",
       icon: ClipboardList,
       iconClassName: "from-amber-50 to-amber-100 text-amber-700",
       accentColor: "border-l-amber-500",
@@ -344,11 +399,13 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="p-5">
           <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
-            {operationalFlow.map((step, index) => (
-              <div
-                key={step.label}
-                className="contents"
-              >
+            {([
+              { label: "Barang Masuk", value: flowData.barangMasuk },
+              { label: "Picking",      value: flowData.picking },
+              { label: "Packing",      value: flowData.packing },
+              { label: "Siap Kirim",   value: flowData.siapKirim },
+            ] as { label: string; value: number }[]).map((step, index, arr) => (
+              <div key={step.label} className="contents">
                 <div className="group rounded-xl border border-slate-200/60 bg-gradient-to-br from-slate-50 to-white px-4 py-4 transition-all duration-200 hover:border-blue-200/60 hover:shadow-sm">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <span className="flex size-6 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-blue-700 text-[10px] font-bold text-white">
@@ -361,7 +418,7 @@ export default function DashboardPage() {
                     {formatNumber(step.value)}
                   </p>
                 </div>
-                {index < operationalFlow.length - 1 ? (
+                {index < arr.length - 1 ? (
                   <div className="hidden items-center justify-center md:flex">
                     <ArrowRight className="size-4 text-blue-300" />
                   </div>
@@ -369,6 +426,9 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+          <p className="mt-3 text-xs text-slate-400 text-center">
+            Data hari ini dari Fulfillment Operations
+          </p>
         </CardContent>
       </Card>
 
@@ -475,54 +535,60 @@ export default function DashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table className="min-w-full">
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="px-5 py-3 text-slate-500">Tanggal</TableHead>
-                <TableHead className="px-5 py-3 text-slate-500">Klien</TableHead>
-                <TableHead className="px-5 py-3 text-slate-500">SKU</TableHead>
-                <TableHead className="px-5 py-3 text-slate-500">Tipe</TableHead>
-                <TableHead className="px-5 py-3 text-right text-slate-500">Qty</TableHead>
-                <TableHead className="px-5 py-3 text-right text-slate-500">Fee</TableHead>
-                <TableHead className="px-5 py-3 text-slate-500">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentTransactions.map((transaction) => (
-                <TableRow
-                  key={transaction.id}
-                  className="border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30"
-                >
-                  <TableCell className="px-5 py-4 text-slate-600">
-                    {formatDate(transaction.date)}
-                  </TableCell>
-                  <TableCell className="px-5 py-4 font-medium text-slate-900">
-                    {clientMap.get(transaction.clientId) ?? "-"}
-                  </TableCell>
-                  <TableCell className="max-w-[260px] px-5 py-4 text-slate-600 whitespace-normal">
-                    {skuMap.get(transaction.skuId) ?? "-"}
-                  </TableCell>
-                  <TableCell className="px-5 py-4 text-slate-600">
-                    {transactionTypeLabels[transaction.type]}
-                  </TableCell>
-                  <TableCell className="px-5 py-4 text-right text-slate-600">
-                    {formatNumber(transaction.qty)}
-                  </TableCell>
-                  <TableCell className="px-5 py-4 text-right text-slate-900">
-                    {formatRupiah(transaction.fee)}
-                  </TableCell>
-                  <TableCell className="px-5 py-4">
-                    <Badge
-                      variant="outline"
-                      className={getOrderStatusBadgeClass(transaction.status)}
-                    >
-                      {orderStatusLabels[transaction.status]}
-                    </Badge>
-                  </TableCell>
+          {liveTransactions.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 py-12 text-center">
+              <ClipboardList className="size-10 text-slate-300" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-slate-600">
+                  Belum ada transaksi.
+                </p>
+                <p className="text-xs text-slate-400">
+                  Mulai dari halaman Fulfillment Operations.
+                </p>
+              </div>
+              <Link
+                href="/fulfillment"
+                className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+              >
+                Buka Fulfillment Operations
+              </Link>
+            </div>
+          ) : (
+            <Table className="min-w-full">
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-5 py-3 text-slate-500">Tanggal</TableHead>
+                  <TableHead className="px-5 py-3 text-slate-500">Klien</TableHead>
+                  <TableHead className="px-5 py-3 text-slate-500">SKU</TableHead>
+                  <TableHead className="px-5 py-3 text-slate-500">Tipe</TableHead>
+                  <TableHead className="px-5 py-3 text-right text-slate-500">Qty</TableHead>
+                  <TableHead className="px-5 py-3 text-slate-500">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {liveTransactions.map((tx) => (
+                  <TableRow
+                    key={tx.id}
+                    className="border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30"
+                  >
+                    <TableCell className="px-5 py-4 text-slate-600">{tx.date}</TableCell>
+                    <TableCell className="px-5 py-4 font-medium text-slate-900">{tx.clientName || "–"}</TableCell>
+                    <TableCell className="max-w-[260px] px-5 py-4 text-slate-600 whitespace-normal">{tx.skuName || "–"}</TableCell>
+                    <TableCell className="px-5 py-4 text-slate-600 capitalize">
+                      {tx.type === "inbound" ? "Inbound" :
+                       tx.type === "outbound" ? "Outbound" :
+                       tx.type === "return" ? "Retur" :
+                       tx.type === "withdrawal" ? "Penarikan" : "Expired"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-right text-slate-600">{formatNumber(tx.qty)}</TableCell>
+                    <TableCell className="px-5 py-4">
+                      <Badge variant="outline" className="capitalize text-xs">{tx.status}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

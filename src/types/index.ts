@@ -134,3 +134,84 @@ export interface DashboardStats {
   kapasitasGudang: number
   flow: OperationalFlow
 }
+
+// ── Fulfillment Operations ────────────────────────────────────────────────────
+
+export type InboundStatus = 'diterima' | 'selesai'
+
+export interface InboundRecord {
+  id: string
+  clientId: string
+  clientName: string
+  skuId: string
+  skuName: string
+  batchCode: string
+  qtyPallet: number
+  qtyUnit: number
+  notes: string
+  receivedAt: string
+  status: InboundStatus
+}
+
+export type OutboundStatus = 'pending' | 'picking' | 'packing' | 'siap_kirim' | 'terkirim'
+
+export interface OutboundRecord {
+  id: string
+  clientId: string
+  clientName: string
+  skuId: string
+  skuName: string
+  orderRef: string
+  destination: string
+  courier: string
+  qty: number
+  status: OutboundStatus
+  createdAt: string
+  shippedAt?: string
+}
+
+export type ReturnStatus = 'diterima' | 'diproses' | 'selesai'
+
+export interface ReturnRecord {
+  id: string
+  clientId: string
+  clientName: string
+  skuId: string
+  skuName: string
+  orderRef: string
+  reason: string
+  qtyReturned: number
+  status: ReturnStatus
+  createdAt: string
+}
+
+export type WithdrawalStatus = 'pending' | 'diproses' | 'selesai'
+
+export interface WithdrawalRecord {
+  id: string
+  clientId: string
+  clientName: string
+  skuId: string
+  skuName: string
+  qtyPallet: number
+  qtyUnit: number
+  notes: string
+  requestedAt: string
+  status: WithdrawalStatus
+}
+
+export type ExpiredStatus = 'pending' | 'selesai'
+export type ExpiredAction = 'pemusnahan' | 'pengembalian'
+
+export interface ExpiredRecord {
+  id: string
+  clientId: string
+  clientName: string
+  skuId: string
+  skuName: string
+  qty: number
+  action: ExpiredAction
+  notes: string
+  handledAt: string
+  status: ExpiredStatus
+}
