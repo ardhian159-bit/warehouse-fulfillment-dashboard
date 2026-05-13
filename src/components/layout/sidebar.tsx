@@ -33,9 +33,9 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-slate-200 bg-white">
-      <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
-        <div className="flex size-9 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-600">
+    <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-slate-200/60 bg-gradient-to-b from-white via-white to-slate-50/80">
+      <div className="flex h-16 items-center gap-3 border-b border-slate-200/60 px-5">
+        <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-sm shadow-blue-600/20">
           <Warehouse className="size-4" />
         </div>
         <div className="min-w-0">
@@ -58,10 +58,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200",
+                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
-                  : "border border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "border border-blue-200/80 bg-gradient-to-r from-blue-50 to-blue-100/60 text-blue-700 shadow-sm shadow-blue-500/5"
+                  : "border border-transparent text-slate-600 hover:translate-x-0.5 hover:bg-slate-50 hover:text-slate-900"
               )}
             >
               <Icon className="size-4 shrink-0" />
@@ -71,12 +71,12 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="space-y-1 border-t border-slate-200 px-5 py-4">
+      <div className="space-y-1 border-t border-slate-200/60 px-5 py-4">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
           Gudang
         </p>
         <p className="text-sm text-slate-600">Jombang, Jawa Timur</p>
-        <p className="text-xs text-slate-500">v1.0 Prototype</p>
+        <p className="text-xs text-slate-400">v1.0 Prototype</p>
       </div>
     </aside>
   )

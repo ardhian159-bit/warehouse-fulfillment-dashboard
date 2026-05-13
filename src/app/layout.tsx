@@ -31,8 +31,8 @@ export default function RootLayout({
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-slate-50 font-sans text-slate-950">
-        <div className="min-h-screen bg-slate-50">
+      <body className="min-h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/40 font-sans text-slate-950">
+        <div className="min-h-screen">
           <Sidebar />
           <div className="pl-60">
             <Header />

@@ -1,25 +1,43 @@
 import Link from "next/link"
 import {
+  AlertTriangle,
   ArrowLeft,
   Calendar,
   MapPin,
   Phone,
   ReceiptText,
+  ShieldCheck,
   User,
+  Wallet,
 } from "lucide-react"
 
 import billingData from "@/data/mock/billing.json"
 import clientsData from "@/data/mock/clients.json"
+import palletsData from "@/data/mock/pallets.json"
 import skusData from "@/data/mock/skus.json"
 import transactionsData from "@/data/mock/transactions.json"
-import { formatNumber, formatRupiah } from "@/lib/utils"
+import {
+  billingStatusLabels,
+  clientStatusLabels,
+  clientTypeLabels,
+  contractTypeLabels,
+  getBillingStatusBadgeClass,
+  getClientStatusBadgeClass,
+  getClientTypeBadgeClass,
+  getContractBadgeClass,
+  getOrderStatusBadgeClass,
+  getStockBadgeClass,
+  getTransactionTypeBadgeClass,
+  orderStatusLabels,
+  stockStatusLabels,
+  transactionTypeLabels,
+} from "@/lib/badge-styles"
+import { formatDate, formatNumber, formatRupiah } from "@/lib/utils"
+import { getDeadStockAlerts } from "@/lib/billing-engine"
 import type {
   BillingItem,
   Client,
-  ClientStatus,
-  ClientType,
-  ContractType,
-  OrderStatus,
+  Pallet,
   SKU,
   Transaction,
 } from "@/types"
@@ -38,144 +56,7 @@ const clients: Client[] = clientsData as Client[]
 const skus: SKU[] = skusData as SKU[]
 const transactions: Transaction[] = transactionsData as Transaction[]
 const billingItems: BillingItem[] = billingData as BillingItem[]
-
-const typeLabels: Record<ClientType, string> = {
-  space: "Space",
-  fulfillment: "Fulfillment",
-  hybrid: "Hybrid",
-}
-
-const contractLabels: Record<ContractType, string> = {
-  reguler: "Reguler",
-  group: "Group",
-}
-
-const clientStatusLabels: Record<ClientStatus, string> = {
-  active: "Aktif",
-  inactive: "Tidak Aktif",
-}
-
-const stockStatusLabels: Record<SKU["status"], string> = {
-  aman: "Aman",
-  menipis: "Menipis",
-  kritis: "Kritis",
-}
-
-const transactionTypeLabels: Record<Transaction["type"], string> = {
-  inbound: "Inbound",
-  outbound: "Outbound",
-  return: "Retur",
-  expired: "Expired",
-  withdrawal: "Withdrawal",
-}
-
-const orderStatusLabels: Record<OrderStatus, string> = {
-  pending: "Menunggu",
-  picking: "Picking",
-  packing: "Packing",
-  shipped: "Terkirim",
-  cancelled: "Dibatalkan",
-}
-
-const billingStatusLabels: Record<BillingItem["status"], string> = {
-  draft: "Draft",
-  sent: "Terkirim",
-  paid: "Lunas",
-}
-
-function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(date))
-}
-
-function getTypeBadgeClass(type: ClientType): string {
-  if (type === "space") {
-    return "border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
-  }
-
-  if (type === "fulfillment") {
-    return "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-50"
-  }
-
-  return "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-50"
-}
-
-function getContractBadgeClass(contractType: ContractType): string {
-  if (contractType === "group") {
-    return "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-  }
-
-  return "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-100"
-}
-
-function getClientStatusBadgeClass(status: ClientStatus): string {
-  if (status === "active") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-  }
-
-  return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-}
-
-function getStockBadgeClass(status: SKU["status"]): string {
-  if (status === "kritis") {
-    return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-  }
-
-  if (status === "menipis") {
-    return "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-  }
-
-  return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-}
-
-function getTransactionTypeBadgeClass(type: Transaction["type"]): string {
-  switch (type) {
-    case "inbound":
-      return "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50"
-    case "outbound":
-      return "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-50"
-    case "return":
-      return "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-50"
-    case "expired":
-      return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-    case "withdrawal":
-      return "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-100"
-    default:
-      return ""
-  }
-}
-
-function getOrderStatusBadgeClass(status: OrderStatus): string {
-  switch (status) {
-    case "pending":
-      return "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-100"
-    case "picking":
-      return "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50"
-    case "packing":
-      return "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-50"
-    case "shipped":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-    case "cancelled":
-      return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-    default:
-      return ""
-  }
-}
-
-function getBillingStatusBadgeClass(status: BillingItem["status"]): string {
-  if (status === "paid") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-  }
-
-  if (status === "sent") {
-    return "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50"
-  }
-
-  return "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-}
+const pallets: Pallet[] = palletsData as Pallet[]
 
 function InfoItem({
   icon: Icon,
@@ -187,9 +68,9 @@ function InfoItem({
   value: string
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+    <div className="group rounded-xl border border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-white px-4 py-3 transition-all duration-200 hover:border-blue-200/60 hover:shadow-sm">
       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500">
-        <Icon className="size-4" />
+        <Icon className="size-4 transition-colors duration-200 group-hover:text-blue-600" />
         {label}
       </div>
       <p className="text-sm leading-6 text-slate-900">{value}</p>
@@ -197,9 +78,9 @@ function InfoItem({
   )
 }
 
-function MiniStatCard({ label, value }: { label: string; value: string }) {
+function MiniStatCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
-    <Card className="border border-slate-200 bg-white shadow-none ring-0">
+    <Card className={`card-glass card-hover border-l-4 ${accent ?? "border-l-blue-500"}`}>
       <CardContent className="p-4">
         <p className="text-sm font-medium leading-5 text-slate-500">{label}</p>
         <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
@@ -229,7 +110,7 @@ export default async function ClientDetailPage({
           Kembali ke Daftar Klien
         </Link>
 
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
+        <Card className="card-glass">
           <CardContent className="px-6 py-10 text-center">
             <p className="text-lg font-semibold text-slate-900">Klien tidak ditemukan</p>
             <p className="mt-2 text-sm text-slate-500">
@@ -259,13 +140,20 @@ export default async function ClientDetailPage({
   const lowSkuCount = clientSkus.filter((sku) => sku.status === "menipis").length
   const storageEstimate = client.areaM2 * client.rackLevels * client.ratePerM2
 
+  // Dead stock alerts for this client
+  const clientPallets = pallets.filter((p) => p.clientId === client.id)
+  const rateMap = new Map([[client.id, client.ratePerM2]])
+  const deadStockAlerts = getDeadStockAlerts(clientPallets, "2025-05-10", rateMap)
+  const skuNameById = new Map(clientSkus.map((s) => [s.id, s.name]))
+
   return (
     <section className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-5">
         <div className="space-y-6 xl:col-span-3">
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
+          <Card className="card-glass overflow-hidden">
+            <div className="h-1.5 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400" />
             <CardContent className="p-6">
-              <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-start md:justify-between">
+              <div className="flex flex-col gap-4 border-b border-slate-100/80 pb-5 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
@@ -273,15 +161,15 @@ export default async function ClientDetailPage({
                     </h2>
                     <Badge
                       variant="outline"
-                      className={getTypeBadgeClass(client.type)}
+                      className={getClientTypeBadgeClass(client.type)}
                     >
-                      {typeLabels[client.type]}
+                      {clientTypeLabels[client.type]}
                     </Badge>
                     <Badge
                       variant="outline"
                       className={getContractBadgeClass(client.contractType)}
                     >
-                      {contractLabels[client.contractType]}
+                      {contractTypeLabels[client.contractType]}
                     </Badge>
                   </div>
                   <p className="text-sm leading-6 text-slate-600">
@@ -312,15 +200,28 @@ export default async function ClientDetailPage({
                   label="Rate"
                   value={`${formatRupiah(client.ratePerM2)}/m²`}
                 />
+                <InfoItem
+                  icon={ShieldCheck}
+                  label="Kontrak"
+                  value={`${formatDate(client.contractStart)} — ${formatDate(client.contractEnd)}`}
+                />
+                <InfoItem
+                  icon={Wallet}
+                  label="Minimum Billing"
+                  value={client.minimumBilling > 0 ? formatRupiah(client.minimumBilling) : "Tidak ada"}
+                />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
               <div className="flex items-center justify-between gap-3">
-                <CardTitle>Produk SKU</CardTitle>
-                <Badge variant="outline" className="border-slate-200 bg-slate-100 text-slate-700">
+                <CardTitle>
+                  <span className="section-dot" />
+                  Produk SKU
+                </CardTitle>
+                <Badge variant="outline" className="border-slate-200/60 bg-slate-100 text-slate-700">
                   {formatNumber(clientSkus.length)}
                 </Badge>
               </div>
@@ -343,7 +244,7 @@ export default async function ClientDetailPage({
                   </TableHeader>
                   <TableBody>
                     {clientSkus.map((sku) => (
-                      <TableRow key={sku.id} className="border-slate-100 hover:bg-slate-50">
+                      <TableRow key={sku.id} className="border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30">
                         <TableCell className="px-5 py-4 font-medium text-slate-900">
                           {sku.skuCode}
                         </TableCell>
@@ -370,11 +271,14 @@ export default async function ClientDetailPage({
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
               <div className="flex items-center justify-between gap-3">
-                <CardTitle>Riwayat Transaksi</CardTitle>
-                <Badge variant="outline" className="border-slate-200 bg-slate-100 text-slate-700">
+                <CardTitle>
+                  <span className="section-dot" />
+                  Riwayat Transaksi
+                </CardTitle>
+                <Badge variant="outline" className="border-slate-200/60 bg-slate-100 text-slate-700">
                   {formatNumber(clientTransactions.length)}
                 </Badge>
               </div>
@@ -400,7 +304,7 @@ export default async function ClientDetailPage({
                     {clientTransactions.map((transaction) => (
                       <TableRow
                         key={transaction.id}
-                        className="border-slate-100 hover:bg-slate-50"
+                        className="border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30"
                       >
                         <TableCell className="px-5 py-4 text-slate-600">
                           {formatDate(transaction.date)}
@@ -448,10 +352,13 @@ export default async function ClientDetailPage({
             Kembali ke Daftar Klien
           </Link>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
               <div className="flex items-center justify-between gap-3">
-                <CardTitle>Tagihan Bulan Ini</CardTitle>
+                <CardTitle>
+                  <span className="section-dot" />
+                  Tagihan Bulan Ini
+                </CardTitle>
                 {currentBilling ? (
                   <Badge
                     variant="outline"
@@ -466,44 +373,44 @@ export default async function ClientDetailPage({
               {currentBilling ? (
                 <>
                   <div className="space-y-3 text-sm text-slate-600">
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Storage Fee</span>
                       <span>{formatRupiah(currentBilling.storageFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Inbound Fee</span>
                       <span>{formatRupiah(currentBilling.inboundFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Outbound Fee</span>
                       <span>{formatRupiah(currentBilling.outboundFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Picking & Packing Fee</span>
                       <span>{formatRupiah(currentBilling.pickingPackingFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Return Fee</span>
                       <span>{formatRupiah(currentBilling.returnFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Expired Fee</span>
                       <span>{formatRupiah(currentBilling.expiredFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Withdrawal Fee</span>
                       <span>{formatRupiah(currentBilling.withdrawalFee)}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-4 rounded-lg px-2 py-1 transition-colors duration-150 hover:bg-slate-50">
                       <span>Dead Stock Fee</span>
                       <span>{formatRupiah(currentBilling.deadStockFee)}</span>
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-4">
+                  <div className="border-t border-slate-200/60 pt-4">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-sm font-medium text-slate-500">TOTAL</span>
-                      <span className="text-2xl font-semibold tracking-tight text-indigo-700">
+                      <span className="bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-2xl font-semibold tracking-tight text-transparent">
                         {formatRupiah(currentBilling.totalFee)}
                       </span>
                     </div>
@@ -515,9 +422,9 @@ export default async function ClientDetailPage({
                     Belum ada tagihan tersimpan untuk Mei 2025. Nilai berikut adalah
                     estimasi storage fee berdasarkan area, level rack, dan rate aktif.
                   </p>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div className="rounded-xl border border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-white px-4 py-4">
                     <p className="text-sm font-medium text-slate-500">Estimasi storage fee</p>
-                    <p className="mt-2 text-2xl font-semibold tracking-tight text-indigo-700">
+                    <p className="mt-2 bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-2xl font-semibold tracking-tight text-transparent">
                       {formatRupiah(storageEstimate)}
                     </p>
                   </div>
@@ -530,11 +437,46 @@ export default async function ClientDetailPage({
             <MiniStatCard
               label="Total Transaksi Bulan Ini"
               value={formatNumber(monthlyTransactionCount)}
+              accent="border-l-blue-500"
             />
-            <MiniStatCard label="Total Volume" value={formatNumber(totalVolume)} />
-            <MiniStatCard label="SKU Kritis" value={formatNumber(criticalSkuCount)} />
-            <MiniStatCard label="SKU Menipis" value={formatNumber(lowSkuCount)} />
+            <MiniStatCard label="Total Volume" value={formatNumber(totalVolume)} accent="border-l-emerald-500" />
+            <MiniStatCard label="SKU Kritis" value={formatNumber(criticalSkuCount)} accent="border-l-red-500" />
+            <MiniStatCard label="SKU Menipis" value={formatNumber(lowSkuCount)} accent="border-l-amber-500" />
           </div>
+
+          {deadStockAlerts.length > 0 ? (
+            <Card className="border-l-4 border-l-orange-500 border-orange-200/60 bg-gradient-to-r from-orange-50/60 via-white to-white shadow-sm ring-0">
+              <CardHeader className="border-b border-orange-100/80">
+                <CardTitle className="flex items-center gap-2 text-orange-700">
+                  <AlertTriangle className="size-4" />
+                  Peringatan Dead Stock
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 p-5">
+                {deadStockAlerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className="flex items-center gap-3 rounded-xl border border-orange-100/80 bg-gradient-to-r from-orange-50/60 to-white px-4 py-3 transition-all duration-200 hover:shadow-sm"
+                  >
+                    <span className={`size-2 shrink-0 rounded-full ${alert.isDeadStock ? "bg-red-500 animate-pulse-dot" : "bg-amber-500"}`} />
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        Pallet {alert.position} — {skuNameById.get(alert.skuId) ?? alert.skuId}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {alert.daysStored} hari tidak bergerak ·{" "}
+                        {alert.isDeadStock ? (
+                          <span className="font-medium text-red-600">Penalti 2× tarif aktif</span>
+                        ) : (
+                          <span className="font-medium text-amber-600">Peringatan — segera pindahkan</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </div>
     </section>

@@ -1,0 +1,21 @@
+{
+  "id": "wh-jombang-001",
+  "name": "Gudang Hybrid Jombang",
+  "totalAreaM2": 1200,
+  "effectiveAreaM2": 720,
+  "efficiencyRatio": 0.6,
+  "zones": [
+    {
+      "id": "zone-space",
+      "name": "Area Sewa Space",
+      "zoneType": "space",
+      "areaM2": 360
+    },
+    {
+      "id": "zone-fulfillment",
+      "name": "Area Fulfillment",
+      "zoneType": "fulfillment",
+      "areaM2": 360
+    }
+  ]
+}

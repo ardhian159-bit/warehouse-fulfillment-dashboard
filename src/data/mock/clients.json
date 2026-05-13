@@ -11,7 +11,10 @@
     "rackLevels": 3,
     "ratePerM2": 38000,
     "status": "active",
-    "joinDate": "2024-01-15"
+    "joinDate": "2024-01-15",
+    "contractStart": "2024-01-15",
+    "contractEnd": "2025-01-14",
+    "minimumBilling": 5000000
   },
   {
     "id": "client-002",
@@ -25,7 +28,10 @@
     "rackLevels": 3,
     "ratePerM2": 38000,
     "status": "active",
-    "joinDate": "2024-02-01"
+    "joinDate": "2024-02-01",
+    "contractStart": "2024-02-01",
+    "contractEnd": "2025-01-31",
+    "minimumBilling": 0
   },
   {
     "id": "client-003",
@@ -39,7 +45,10 @@
     "rackLevels": 3,
     "ratePerM2": 36000,
     "status": "active",
-    "joinDate": "2024-01-01"
+    "joinDate": "2024-01-01",
+    "contractStart": "2024-01-01",
+    "contractEnd": "2025-12-31",
+    "minimumBilling": 8000000
   },
   {
     "id": "client-004",
@@ -53,7 +62,10 @@
     "rackLevels": 2,
     "ratePerM2": 36000,
     "status": "active",
-    "joinDate": "2024-03-10"
+    "joinDate": "2024-03-10",
+    "contractStart": "2024-03-10",
+    "contractEnd": "2025-03-09",
+    "minimumBilling": 3000000
   },
   {
     "id": "client-005",
@@ -67,7 +79,10 @@
     "rackLevels": 2,
     "ratePerM2": 38000,
     "status": "active",
-    "joinDate": "2024-04-05"
+    "joinDate": "2024-04-05",
+    "contractStart": "2024-04-05",
+    "contractEnd": "2025-04-04",
+    "minimumBilling": 0
   },
   {
     "id": "client-006",
@@ -81,6 +96,9 @@
     "rackLevels": 3,
     "ratePerM2": 38000,
     "status": "inactive",
-    "joinDate": "2023-11-20"
+    "joinDate": "2023-11-20",
+    "contractStart": "2023-11-20",
+    "contractEnd": "2024-11-19",
+    "minimumBilling": 4000000
   }
 ]

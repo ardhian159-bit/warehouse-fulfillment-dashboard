@@ -3,8 +3,18 @@
 import { useEffect, useMemo, useState } from "react"
 import { AlertTriangle, RotateCcw } from "lucide-react"
 
+import {
+  clientStatusLabels,
+  clientTypeLabels,
+  contractTypeLabels,
+  getClientStatusBadgeClass,
+  getClientTypeBadgeClass,
+  getContractBadgeClass,
+  getStockBadgeClass,
+  stockStatusLabels,
+} from "@/lib/badge-styles"
 import { formatNumber, formatRupiah } from "@/lib/utils"
-import type { Client, ClientStatus, ClientType, ContractType, SKU, SkuCategory, StockStatus } from "@/types"
+import type { Client, ClientStatus, ClientType, ContractType, SKU, SkuCategory, SkuSizeCategory, StockStatus } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -96,6 +106,9 @@ function getSeedClients(): SimClient[] {
       ratePerM2: 38000,
       status: "active",
       joinDate: "2025-05-01",
+      contractStart: "2025-05-01",
+      contractEnd: "2026-04-30",
+      minimumBilling: 5000000,
     },
     {
       id: "c2",
@@ -110,6 +123,9 @@ function getSeedClients(): SimClient[] {
       ratePerM2: 38000,
       status: "active",
       joinDate: "2025-05-01",
+      contractStart: "2025-05-01",
+      contractEnd: "2026-04-30",
+      minimumBilling: 0,
     },
     {
       id: "c3",
@@ -124,6 +140,9 @@ function getSeedClients(): SimClient[] {
       ratePerM2: 36000,
       status: "active",
       joinDate: "2025-05-01",
+      contractStart: "2025-05-01",
+      contractEnd: "2026-12-31",
+      minimumBilling: 8000000,
     },
   ]
 }
@@ -141,6 +160,9 @@ function getSeedSkus(): SimSku[] {
       minStock: 500,
       status: "aman",
       lastUpdated: "2025-05-01",
+      weightKg: 0.35,
+      dimensionCm3: 1200,
+      sizeCategory: "small",
     },
     {
       id: "s2",
@@ -153,6 +175,9 @@ function getSeedSkus(): SimSku[] {
       minStock: 800,
       status: "menipis",
       lastUpdated: "2025-05-01",
+      weightKg: 0.5,
+      dimensionCm3: 1800,
+      sizeCategory: "small",
     },
     {
       id: "s3",
@@ -165,6 +190,9 @@ function getSeedSkus(): SimSku[] {
       minStock: 200,
       status: "kritis",
       lastUpdated: "2025-05-01",
+      weightKg: 0.15,
+      dimensionCm3: 400,
+      sizeCategory: "small",
     },
   ]
 }
@@ -181,45 +209,7 @@ function calculateSkuStatus(stockQty: number, minStock: number): StockStatus {
   return "aman"
 }
 
-function getClientTypeBadgeClass(type: ClientType): string {
-  if (type === "space") {
-    return "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50"
-  }
-
-  if (type === "fulfillment") {
-    return "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-50"
-  }
-
-  return "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-50"
-}
-
-function getContractBadgeClass(contractType: ContractType): string {
-  if (contractType === "group") {
-    return "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-  }
-
-  return "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-100"
-}
-
-function getClientStatusBadgeClass(status: ClientStatus): string {
-  if (status === "active") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-  }
-
-  return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-}
-
-function getSkuStatusBadgeClass(status: StockStatus): string {
-  if (status === "aman") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-  }
-
-  if (status === "menipis") {
-    return "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-  }
-
-  return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-}
+// Badge helpers now imported from @/lib/badge-styles
 
 function persistData(clients: SimClient[], skus: SimSku[]) {
   localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients))
@@ -281,6 +271,9 @@ export default function SimulationPage() {
       return
     }
 
+    const today = new Date().toISOString().slice(0, 10)
+    const oneYearLater = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
     const newClient: SimClient = {
       id: `c${Date.now()}`,
       name: clientForm.name.trim(),
@@ -293,7 +286,10 @@ export default function SimulationPage() {
       rackLevels: Number(clientForm.rackLevels || "3"),
       ratePerM2: Number(clientForm.ratePerM2 || "38000"),
       status: clientForm.status || "active",
-      joinDate: new Date().toISOString().slice(0, 10),
+      joinDate: today,
+      contractStart: today,
+      contractEnd: oneYearLater,
+      minimumBilling: clientForm.type === "space" ? 0 : 3000000,
     }
 
     const nextClients = [...clients, newClient]
@@ -325,6 +321,9 @@ export default function SimulationPage() {
       minStock,
       status: calculateSkuStatus(stockQty, minStock),
       lastUpdated: new Date().toISOString().slice(0, 10),
+      weightKg: 0.5,
+      dimensionCm3: 1500,
+      sizeCategory: "small" as SkuSizeCategory,
     }
 
     const nextSkus = [...skus, newSku]
@@ -438,9 +437,12 @@ export default function SimulationPage() {
 
   return (
     <section className="space-y-6">
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in-up">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-indigo-600">Simulation Playground</p>
+          <p className="text-sm font-medium text-blue-600">
+            <span className="section-dot" />
+            Simulation Playground
+          </p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
             Simulasi Data
           </h2>
@@ -449,10 +451,10 @@ export default function SimulationPage() {
           </p>
         </div>
 
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="flex items-start gap-3 rounded-xl border-l-4 border-l-orange-500 border border-orange-200/60 bg-gradient-to-r from-orange-50/60 to-white px-4 py-3 text-sm text-orange-800">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <p>
-            ⚠ Ini adalah halaman simulasi prototype. Data tersimpan di browser dan
+            Ini adalah halaman simulasi prototype. Data tersimpan di browser dan
             tidak terhubung ke server.
           </p>
         </div>
@@ -466,20 +468,20 @@ export default function SimulationPage() {
 
         <TabsContent value="clients" className="space-y-6">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-slate-200 bg-white text-slate-700">
+            <Badge variant="outline" className="border-slate-200/60 bg-white/80 px-3 py-1 text-slate-700 backdrop-blur-sm">
               Total Klien: {clientStats.total}
             </Badge>
-            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
               Aktif: {clientStats.active}
             </Badge>
-            <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
+            <Badge variant="outline" className="border-red-200 bg-red-50 px-3 py-1 text-red-700">
               Tidak Aktif: {clientStats.inactive}
             </Badge>
           </div>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
-              <CardTitle>Tambah Klien Baru</CardTitle>
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
+              <CardTitle><span className="section-dot" />Tambah Klien Baru</CardTitle>
             </CardHeader>
             <CardContent className="p-5">
               <form onSubmit={handleAddClient} className="space-y-4">
@@ -488,13 +490,13 @@ export default function SimulationPage() {
                     placeholder="Nama Klien"
                     value={clientForm.name}
                     onChange={(event) => setClientForm((prev) => ({ ...prev, name: event.target.value }))}
-                    className="h-10 border-slate-200"
+                    className="h-10 border-slate-200/60 bg-white/60 backdrop-blur-sm"
                   />
                   <Select
                     value={clientForm.type || undefined}
                     onValueChange={(value) => { if (value) setClientForm((prev) => ({ ...prev, type: value as ClientType })) }}
                   >
-                    <SelectTrigger className="h-10 w-full border-slate-200">
+                    <SelectTrigger className="h-10 w-full border-slate-200/60 bg-white/60 backdrop-blur-sm">
                       <SelectValue placeholder="Pilih Tipe" />
                     </SelectTrigger>
                     <SelectContent>
@@ -507,7 +509,7 @@ export default function SimulationPage() {
                     value={clientForm.contractType || undefined}
                     onValueChange={(value) => { if (value) setClientForm((prev) => ({ ...prev, contractType: value as ContractType })) }}
                   >
-                    <SelectTrigger className="h-10 w-full border-slate-200">
+                    <SelectTrigger className="h-10 w-full border-slate-200/60 bg-white/60 backdrop-blur-sm">
                       <SelectValue placeholder="Pilih Kontrak" />
                     </SelectTrigger>
                     <SelectContent>
@@ -519,40 +521,40 @@ export default function SimulationPage() {
                     placeholder="Contact Person"
                     value={clientForm.contactPerson}
                     onChange={(event) => setClientForm((prev) => ({ ...prev, contactPerson: event.target.value }))}
-                    className="h-10 border-slate-200"
+                    className="h-10 border-slate-200/60 bg-white/60 backdrop-blur-sm"
                   />
                   <Input
                     placeholder="Phone"
                     value={clientForm.phone}
                     onChange={(event) => setClientForm((prev) => ({ ...prev, phone: event.target.value }))}
-                    className="h-10 border-slate-200"
+                    className="h-10 border-slate-200/60 bg-white/60 backdrop-blur-sm"
                   />
                   <Input
                     type="number"
                     placeholder="Area m²"
                     value={clientForm.areaM2}
                     onChange={(event) => setClientForm((prev) => ({ ...prev, areaM2: event.target.value }))}
-                    className="h-10 border-slate-200"
+                    className="h-10 border-slate-200/60 bg-white/60 backdrop-blur-sm"
                   />
                   <Input
                     type="number"
                     placeholder="Rack Levels"
                     value={clientForm.rackLevels}
                     onChange={(event) => setClientForm((prev) => ({ ...prev, rackLevels: event.target.value }))}
-                    className="h-10 border-slate-200"
+                    className="h-10 border-slate-200/60 bg-white/60 backdrop-blur-sm"
                   />
                   <Input
                     type="number"
                     placeholder="Rate/m²"
                     value={clientForm.ratePerM2}
                     onChange={(event) => setClientForm((prev) => ({ ...prev, ratePerM2: event.target.value }))}
-                    className="h-10 border-slate-200"
+                    className="h-10 border-slate-200/60 bg-white/60 backdrop-blur-sm"
                   />
                   <Select
                     value={clientForm.status || undefined}
                     onValueChange={(value) => { if (value) setClientForm((prev) => ({ ...prev, status: value as ClientStatus })) }}
                   >
-                    <SelectTrigger className="h-10 w-full border-slate-200">
+                    <SelectTrigger className="h-10 w-full border-slate-200/60 bg-white/60 backdrop-blur-sm">
                       <SelectValue placeholder="Pilih Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -562,16 +564,16 @@ export default function SimulationPage() {
                   </Select>
                 </div>
 
-                <Button type="submit" className="h-10 w-full cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700">
+                <Button type="submit" className="h-10 w-full cursor-pointer bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700">
                   Tambah Klien
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
-              <CardTitle>Daftar Klien Simulasi</CardTitle>
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
+              <CardTitle><span className="section-dot" />Daftar Klien Simulasi</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table className="min-w-[980px]">
@@ -593,12 +595,12 @@ export default function SimulationPage() {
 
                     if (isEditing && editingClient) {
                       return (
-                        <TableRow key={client.id} className="border-slate-100 bg-slate-50">
+                        <TableRow key={client.id} className="border-slate-100/80 bg-blue-50/30">
                           <TableCell className="px-5 py-4">
                             <Input
                               value={editingClient.name}
                               onChange={(event) => setEditingClient({ ...editingClient, name: event.target.value })}
-                              className="h-9 border-slate-200"
+                              className="h-9 border-slate-200/60 bg-white/60"
                             />
                           </TableCell>
                           <TableCell className="px-5 py-4">
@@ -606,7 +608,7 @@ export default function SimulationPage() {
                               value={editingClient.type}
                               onValueChange={(value) => { if (value) setEditingClient({ ...editingClient, type: value as ClientType }) }}
                             >
-                              <SelectTrigger className="h-9 w-full border-slate-200">
+                              <SelectTrigger className="h-9 w-full border-slate-200/60 bg-white/60">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -665,7 +667,7 @@ export default function SimulationPage() {
                           </TableCell>
                           <TableCell className="px-5 py-4 text-right">
                             <div className="flex justify-end gap-2">
-                              <Button type="button" size="sm" className="cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700" onClick={saveEditClient}>
+                              <Button type="button" size="sm" className="cursor-pointer bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700" onClick={saveEditClient}>
                                 Save
                               </Button>
                               <Button type="button" size="sm" variant="outline" className="cursor-pointer" onClick={cancelEditClient}>
@@ -678,16 +680,16 @@ export default function SimulationPage() {
                     }
 
                     return (
-                      <TableRow key={client.id} className="border-slate-100 hover:bg-slate-50">
+                      <TableRow key={client.id} className="border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30">
                         <TableCell className="px-5 py-4 font-medium text-slate-900">{client.name}</TableCell>
                         <TableCell className="px-5 py-4">
                           <Badge variant="outline" className={getClientTypeBadgeClass(client.type)}>
-                            {client.type}
+                            {clientTypeLabels[client.type]}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-5 py-4">
                           <Badge variant="outline" className={getContractBadgeClass(client.contractType)}>
-                            {client.contractType}
+                            {contractTypeLabels[client.contractType]}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-5 py-4 text-slate-600">
@@ -701,7 +703,7 @@ export default function SimulationPage() {
                         </TableCell>
                         <TableCell className="px-5 py-4">
                           <Badge variant="outline" className={getClientStatusBadgeClass(client.status)}>
-                            {client.status}
+                            {clientStatusLabels[client.status]}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-5 py-4 text-right">
@@ -725,23 +727,23 @@ export default function SimulationPage() {
 
         <TabsContent value="skus" className="space-y-6">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="border-slate-200 bg-white text-slate-700">
+            <Badge variant="outline" className="border-slate-200/60 bg-white/80 px-3 py-1 text-slate-700 backdrop-blur-sm">
               Total SKU: {skuStats.total}
             </Badge>
-            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+            <Badge variant="outline" className="border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
               Aman: {skuStats.aman}
             </Badge>
-            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+            <Badge variant="outline" className="border-amber-200 bg-amber-50 px-3 py-1 text-amber-700">
               Menipis: {skuStats.menipis}
             </Badge>
-            <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
+            <Badge variant="outline" className="border-red-200 bg-red-50 px-3 py-1 text-red-700">
               Kritis: {skuStats.kritis}
             </Badge>
           </div>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
-              <CardTitle>Tambah SKU Baru</CardTitle>
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
+              <CardTitle><span className="section-dot" />Tambah SKU Baru</CardTitle>
             </CardHeader>
             <CardContent className="p-5">
               <form onSubmit={handleAddSku} className="space-y-4">
@@ -810,16 +812,16 @@ export default function SimulationPage() {
                   />
                 </div>
 
-                <Button type="submit" className="h-10 w-full cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700">
+                <Button type="submit" className="h-10 w-full cursor-pointer bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700">
                   Tambah SKU
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          <Card className="border border-slate-200 bg-white shadow-none ring-0">
-            <CardHeader className="border-b border-slate-100">
-              <CardTitle>Daftar SKU Simulasi</CardTitle>
+          <Card className="card-glass">
+            <CardHeader className="border-b border-slate-100/80">
+              <CardTitle><span className="section-dot" />Daftar SKU Simulasi</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table className="min-w-[980px]">
@@ -837,7 +839,7 @@ export default function SimulationPage() {
                 </TableHeader>
                 <TableBody>
                   {skus.map((sku) => (
-                    <TableRow key={sku.id} className="border-slate-100 hover:bg-slate-50">
+                    <TableRow key={sku.id} className="border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30">
                       <TableCell className="px-5 py-4 font-medium text-slate-900">{sku.skuCode}</TableCell>
                       <TableCell className="px-5 py-4 text-slate-600">{sku.name}</TableCell>
                       <TableCell className="px-5 py-4 text-slate-600">
@@ -851,8 +853,8 @@ export default function SimulationPage() {
                         {formatNumber(sku.minStock)}
                       </TableCell>
                       <TableCell className="px-5 py-4">
-                        <Badge variant="outline" className={getSkuStatusBadgeClass(sku.status)}>
-                          {sku.status}
+                        <Badge variant="outline" className={getStockBadgeClass(sku.status)}>
+                          {stockStatusLabels[sku.status]}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-5 py-4 text-right">

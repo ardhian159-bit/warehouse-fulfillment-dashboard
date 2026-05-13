@@ -6,6 +6,14 @@ import { ArrowRight, Building2, FileText, Filter, Search } from "lucide-react"
 
 import billingData from "@/data/mock/billing.json"
 import clientsData from "@/data/mock/clients.json"
+import {
+  clientStatusLabels,
+  clientTypeLabels,
+  contractTypeLabels,
+  getClientStatusBadgeClass,
+  getClientTypeBadgeClass,
+  getContractBadgeClass,
+} from "@/lib/badge-styles"
 import { formatNumber, formatRupiah } from "@/lib/utils"
 import type { BillingItem, Client, ClientStatus, ClientType, ContractType } from "@/types"
 import { Badge } from "@/components/ui/badge"
@@ -27,53 +35,15 @@ type ClientTypeFilter = "all" | ClientType
 type ContractFilter = "all" | ContractType
 type StatusFilter = "all" | ClientStatus
 
-const typeLabels: Record<ClientType, string> = {
-  space: "Space",
-  fulfillment: "Fulfillment",
-  hybrid: "Hybrid",
-}
-
-const contractLabels: Record<ContractType, string> = {
-  reguler: "Reguler",
-  group: "Group",
-}
-
-const statusLabels: Record<ClientStatus, string> = {
-  active: "Aktif",
-  inactive: "Tidak Aktif",
-}
-
-function getTypeBadgeClass(type: ClientType): string {
-  if (type === "space") {
-    return "border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
-  }
-
-  if (type === "fulfillment") {
-    return "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-50"
-  }
-
-  return "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-50"
-}
-
-function getContractBadgeClass(contractType: ContractType): string {
-  if (contractType === "group") {
-    return "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
-  }
-
-  return "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-100"
-}
-
-function getStatusBadgeClass(status: ClientStatus): string {
-  if (status === "active") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
-  }
-
-  return "border-red-200 bg-red-50 text-red-700 hover:bg-red-50"
-}
-
 function getMonthlyCharge(client: Client, monthlyStorageMap: Map<string, number>): number {
   const estimate = client.areaM2 * client.rackLevels * client.ratePerM2
   return monthlyStorageMap.get(client.id) ?? estimate
+}
+
+function getTypeAccentBorder(type: ClientType): string {
+  if (type === "space") return "border-l-sky-400"
+  if (type === "fulfillment") return "border-l-blue-500"
+  return "border-l-violet-500"
 }
 
 export default function ClientsPage() {
@@ -118,9 +88,12 @@ export default function ClientsPage() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between animate-fade-in-up">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-indigo-600">Client Management</p>
+          <p className="text-sm font-medium text-blue-600">
+            <span className="section-dot" />
+            Client Management
+          </p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
             Manajemen Klien
           </h2>
@@ -130,29 +103,29 @@ export default function ClientsPage() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="border-slate-200 bg-white px-3 py-1 text-slate-700">
+          <Badge variant="outline" className="border-slate-200/60 bg-white/80 px-3 py-1 text-slate-700 backdrop-blur-sm">
             Aktif: {formatNumber(activeClients.length)}
           </Badge>
-          <Badge variant="outline" className="border-blue-200 bg-blue-50 px-3 py-1 text-blue-700">
+          <Badge variant="outline" className="border-sky-200 bg-sky-50 px-3 py-1 text-sky-700">
             Space: {formatNumber(clients.filter((client) => client.type === "space").length)}
           </Badge>
           <Badge
             variant="outline"
-            className="border-indigo-200 bg-indigo-50 px-3 py-1 text-indigo-700"
+            className="border-blue-200 bg-blue-50 px-3 py-1 text-blue-700"
           >
             Fulfillment:{" "}
             {formatNumber(clients.filter((client) => client.type === "fulfillment").length)}
           </Badge>
           <Badge
             variant="outline"
-            className="border-purple-200 bg-purple-50 px-3 py-1 text-purple-700"
+            className="border-violet-200 bg-violet-50 px-3 py-1 text-violet-700"
           >
             Hybrid: {formatNumber(clients.filter((client) => client.type === "hybrid").length)}
           </Badge>
         </div>
       </div>
 
-      <Card className="border border-slate-200 bg-white shadow-none ring-0">
+      <Card className="card-glass animate-fade-in-up stagger-1">
         <CardContent className="p-5">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,0.8fr))]">
             <label className="space-y-2">
@@ -164,7 +137,7 @@ export default function ClientsPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Cari nama klien..."
-                className="h-10 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
+                className="h-10 border-slate-200/60 bg-white/60 text-slate-900 placeholder:text-slate-400 backdrop-blur-sm"
               />
             </label>
 
@@ -176,7 +149,7 @@ export default function ClientsPage() {
               <select
                 value={typeFilter}
                 onChange={(event) => setTypeFilter(event.target.value as ClientTypeFilter)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-300 focus:ring-3 focus:ring-indigo-100"
+                className="h-10 w-full cursor-pointer rounded-lg border border-slate-200/60 bg-white/60 px-3 text-sm text-slate-900 outline-none backdrop-blur-sm transition-colors focus:border-blue-300 focus:ring-3 focus:ring-blue-100"
               >
                 <option value="all">Semua</option>
                 <option value="space">Space</option>
@@ -192,7 +165,7 @@ export default function ClientsPage() {
               <select
                 value={contractFilter}
                 onChange={(event) => setContractFilter(event.target.value as ContractFilter)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-300 focus:ring-3 focus:ring-indigo-100"
+                className="h-10 w-full cursor-pointer rounded-lg border border-slate-200/60 bg-white/60 px-3 text-sm text-slate-900 outline-none backdrop-blur-sm transition-colors focus:border-blue-300 focus:ring-3 focus:ring-blue-100"
               >
                 <option value="all">Semua</option>
                 <option value="reguler">Reguler</option>
@@ -207,7 +180,7 @@ export default function ClientsPage() {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-300 focus:ring-3 focus:ring-indigo-100"
+                className="h-10 w-full cursor-pointer rounded-lg border border-slate-200/60 bg-white/60 px-3 text-sm text-slate-900 outline-none backdrop-blur-sm transition-colors focus:border-blue-300 focus:ring-3 focus:ring-blue-100"
               >
                 <option value="all">Semua</option>
                 <option value="active">Aktif</option>
@@ -218,9 +191,12 @@ export default function ClientsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border border-slate-200 bg-white shadow-none ring-0">
-        <CardHeader className="border-b border-slate-100">
-          <CardTitle>Daftar Klien</CardTitle>
+      <Card className="card-glass animate-fade-in-up stagger-2">
+        <CardHeader className="border-b border-slate-100/80">
+          <CardTitle>
+            <span className="section-dot" />
+            Daftar Klien
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table className="min-w-[980px]">
@@ -240,7 +216,7 @@ export default function ClientsPage() {
               {filteredClients.map((client) => (
                 <TableRow
                   key={client.id}
-                  className="border-slate-100 hover:bg-slate-50"
+                  className={`border-l-4 border-slate-100/80 transition-colors duration-150 hover:bg-blue-50/30 ${getTypeAccentBorder(client.type)}`}
                 >
                   <TableCell className="px-5 py-4">
                     <div className="space-y-1">
@@ -251,9 +227,9 @@ export default function ClientsPage() {
                   <TableCell className="px-5 py-4">
                     <Badge
                       variant="outline"
-                      className={getTypeBadgeClass(client.type)}
+                      className={getClientTypeBadgeClass(client.type)}
                     >
-                      {typeLabels[client.type]}
+                      {clientTypeLabels[client.type]}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-5 py-4">
@@ -261,7 +237,7 @@ export default function ClientsPage() {
                       variant="outline"
                       className={getContractBadgeClass(client.contractType)}
                     >
-                      {contractLabels[client.contractType]}
+                      {contractTypeLabels[client.contractType]}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-slate-600">
@@ -276,15 +252,15 @@ export default function ClientsPage() {
                   <TableCell className="px-5 py-4">
                     <Badge
                       variant="outline"
-                      className={getStatusBadgeClass(client.status)}
+                      className={getClientStatusBadgeClass(client.status)}
                     >
-                      {statusLabels[client.status]}
+                      {clientStatusLabels[client.status]}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-right">
                     <Link
                       href={`/clients/${client.id}`}
-                      className="inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-indigo-600 transition-colors duration-200 hover:text-indigo-700"
+                      className="inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-blue-600 transition-colors duration-200 hover:text-blue-700"
                     >
                       Detail
                       <ArrowRight className="size-4" />
@@ -296,7 +272,7 @@ export default function ClientsPage() {
           </Table>
 
           {filteredClients.length === 0 ? (
-            <div className="border-t border-slate-100 px-5 py-10 text-center">
+            <div className="border-t border-slate-100/80 px-5 py-10 text-center">
               <p className="text-sm font-medium text-slate-900">Tidak ada klien yang cocok</p>
               <p className="mt-1 text-sm text-slate-500">
                 Coba ubah kata kunci pencarian atau filter yang sedang aktif.
@@ -306,10 +282,10 @@ export default function ClientsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
+      <div className="grid gap-5 xl:grid-cols-3">
+        <Card className="card-glass card-hover animate-fade-in-up stagger-3">
           <CardContent className="flex h-full items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700">
               <Building2 className="size-5" />
             </div>
             <div className="space-y-1">
@@ -321,9 +297,9 @@ export default function ClientsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
+        <Card className="card-glass card-hover animate-fade-in-up stagger-3">
           <CardContent className="flex h-full items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-700">
               <FileText className="size-5" />
             </div>
             <div className="space-y-1">
@@ -335,9 +311,9 @@ export default function ClientsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
+        <Card className="card-glass card-hover animate-fade-in-up stagger-4">
           <CardContent className="flex h-full items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700">
               <Filter className="size-5" />
             </div>
             <div className="space-y-1">

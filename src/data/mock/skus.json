@@ -9,7 +9,10 @@
     "stockQty": 2400,
     "minStock": 500,
     "status": "aman",
-    "lastUpdated": "2025-05-10"
+    "lastUpdated": "2025-05-10",
+    "weightKg": 0.35,
+    "dimensionCm3": 1200,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-002",
@@ -21,7 +24,10 @@
     "stockQty": 850,
     "minStock": 800,
     "status": "menipis",
-    "lastUpdated": "2025-05-09"
+    "lastUpdated": "2025-05-09",
+    "weightKg": 0.5,
+    "dimensionCm3": 1800,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-003",
@@ -33,7 +39,10 @@
     "stockQty": 120,
     "minStock": 200,
     "status": "kritis",
-    "lastUpdated": "2025-05-10"
+    "lastUpdated": "2025-05-10",
+    "weightKg": 0.15,
+    "dimensionCm3": 400,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-004",
@@ -45,7 +54,10 @@
     "stockQty": 5200,
     "minStock": 1000,
     "status": "aman",
-    "lastUpdated": "2025-05-08"
+    "lastUpdated": "2025-05-08",
+    "weightKg": 8.5,
+    "dimensionCm3": 45000,
+    "sizeCategory": "medium"
   },
   {
     "id": "sku-005",
@@ -57,7 +69,10 @@
     "stockQty": 320,
     "minStock": 400,
     "status": "menipis",
-    "lastUpdated": "2025-05-10"
+    "lastUpdated": "2025-05-10",
+    "weightKg": 12.0,
+    "dimensionCm3": 65000,
+    "sizeCategory": "medium"
   },
   {
     "id": "sku-006",
@@ -69,7 +84,10 @@
     "stockQty": 1800,
     "minStock": 500,
     "status": "aman",
-    "lastUpdated": "2025-05-07"
+    "lastUpdated": "2025-05-07",
+    "weightKg": 0.6,
+    "dimensionCm3": 2100,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-007",
@@ -81,7 +99,10 @@
     "stockQty": 430,
     "minStock": 500,
     "status": "menipis",
-    "lastUpdated": "2025-05-09"
+    "lastUpdated": "2025-05-09",
+    "weightKg": 0.55,
+    "dimensionCm3": 1950,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-008",
@@ -93,7 +114,10 @@
     "stockQty": 85,
     "minStock": 150,
     "status": "kritis",
-    "lastUpdated": "2025-05-10"
+    "lastUpdated": "2025-05-10",
+    "weightKg": 0.2,
+    "dimensionCm3": 500,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-009",
@@ -105,7 +129,10 @@
     "stockQty": 3100,
     "minStock": 500,
     "status": "aman",
-    "lastUpdated": "2025-05-06"
+    "lastUpdated": "2025-05-06",
+    "weightKg": 0.25,
+    "dimensionCm3": 900,
+    "sizeCategory": "small"
   },
   {
     "id": "sku-010",
@@ -117,7 +144,10 @@
     "stockQty": 95,
     "minStock": 200,
     "status": "kritis",
-    "lastUpdated": "2025-05-10"
+    "lastUpdated": "2025-05-10",
+    "weightKg": 15.0,
+    "dimensionCm3": 85000,
+    "sizeCategory": "medium"
   },
   {
     "id": "sku-011",
@@ -129,7 +159,10 @@
     "stockQty": 780,
     "minStock": 300,
     "status": "aman",
-    "lastUpdated": "2025-05-08"
+    "lastUpdated": "2025-05-08",
+    "weightKg": 22.0,
+    "dimensionCm3": 120000,
+    "sizeCategory": "large"
   },
   {
     "id": "sku-012",
@@ -141,6 +174,9 @@
     "stockQty": 220,
     "minStock": 300,
     "status": "menipis",
-    "lastUpdated": "2025-05-05"
+    "lastUpdated": "2025-05-05",
+    "weightKg": 0.4,
+    "dimensionCm3": 1400,
+    "sizeCategory": "small"
   }
 ]

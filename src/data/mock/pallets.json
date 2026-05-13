@@ -1,0 +1,22 @@
+[
+  { "id": "plt-001", "clientId": "client-001", "skuId": "sku-001", "zone": "fulfillment", "position": "A-01", "inboundDate": "2025-01-15", "lastMoveDate": "2025-05-04", "qty": 120, "status": "active" },
+  { "id": "plt-002", "clientId": "client-001", "skuId": "sku-001", "zone": "fulfillment", "position": "A-02", "inboundDate": "2025-02-10", "lastMoveDate": "2025-05-04", "qty": 100, "status": "active" },
+  { "id": "plt-003", "clientId": "client-001", "skuId": "sku-002", "zone": "fulfillment", "position": "A-03", "inboundDate": "2025-03-01", "lastMoveDate": "2025-05-05", "qty": 80,  "status": "active" },
+  { "id": "plt-004", "clientId": "client-001", "skuId": "sku-003", "zone": "fulfillment", "position": "A-04", "inboundDate": "2025-01-10", "lastMoveDate": "2025-02-20", "qty": 60,  "status": "dead_stock" },
+  { "id": "plt-005", "clientId": "client-001", "skuId": "sku-003", "zone": "fulfillment", "position": "A-05", "inboundDate": "2025-02-01", "lastMoveDate": "2025-03-05", "qty": 40,  "status": "dead_stock" },
+  { "id": "plt-006", "clientId": "client-002", "skuId": "sku-004", "zone": "space",       "position": "B-01", "inboundDate": "2024-06-01", "lastMoveDate": "2025-05-08", "qty": 200, "status": "active" },
+  { "id": "plt-007", "clientId": "client-002", "skuId": "sku-004", "zone": "space",       "position": "B-02", "inboundDate": "2024-08-15", "lastMoveDate": "2025-05-08", "qty": 180, "status": "active" },
+  { "id": "plt-008", "clientId": "client-002", "skuId": "sku-005", "zone": "space",       "position": "B-03", "inboundDate": "2025-01-20", "lastMoveDate": "2025-03-01", "qty": 100, "status": "dead_stock" },
+  { "id": "plt-009", "clientId": "client-002", "skuId": "sku-005", "zone": "space",       "position": "B-04", "inboundDate": "2025-02-01", "lastMoveDate": "2025-03-10", "qty": 90,  "status": "active" },
+  { "id": "plt-010", "clientId": "client-003", "skuId": "sku-006", "zone": "fulfillment", "position": "C-01", "inboundDate": "2025-01-01", "lastMoveDate": "2025-05-07", "qty": 150, "status": "active" },
+  { "id": "plt-011", "clientId": "client-003", "skuId": "sku-006", "zone": "fulfillment", "position": "C-02", "inboundDate": "2025-02-15", "lastMoveDate": "2025-05-07", "qty": 130, "status": "active" },
+  { "id": "plt-012", "clientId": "client-003", "skuId": "sku-007", "zone": "space",       "position": "C-03", "inboundDate": "2025-01-05", "lastMoveDate": "2025-05-09", "qty": 110, "status": "active" },
+  { "id": "plt-013", "clientId": "client-003", "skuId": "sku-008", "zone": "fulfillment", "position": "C-04", "inboundDate": "2024-12-01", "lastMoveDate": "2025-02-10", "qty": 50,  "status": "dead_stock" },
+  { "id": "plt-014", "clientId": "client-004", "skuId": "sku-009", "zone": "fulfillment", "position": "D-01", "inboundDate": "2025-03-01", "lastMoveDate": "2025-05-08", "qty": 200, "status": "active" },
+  { "id": "plt-015", "clientId": "client-004", "skuId": "sku-009", "zone": "fulfillment", "position": "D-02", "inboundDate": "2025-03-15", "lastMoveDate": "2025-05-08", "qty": 180, "status": "active" },
+  { "id": "plt-016", "clientId": "client-004", "skuId": "sku-010", "zone": "fulfillment", "position": "D-03", "inboundDate": "2025-01-20", "lastMoveDate": "2025-02-28", "qty": 45,  "status": "dead_stock" },
+  { "id": "plt-017", "clientId": "client-005", "skuId": "sku-011", "zone": "space",       "position": "E-01", "inboundDate": "2024-10-01", "lastMoveDate": "2025-05-08", "qty": 160, "status": "active" },
+  { "id": "plt-018", "clientId": "client-005", "skuId": "sku-011", "zone": "space",       "position": "E-02", "inboundDate": "2025-01-10", "lastMoveDate": "2025-03-15", "qty": 120, "status": "active" },
+  { "id": "plt-019", "clientId": "client-006", "skuId": "sku-012", "zone": "space",       "position": "F-01", "inboundDate": "2025-02-01", "lastMoveDate": "2025-05-05", "qty": 90,  "status": "active" },
+  { "id": "plt-020", "clientId": "client-006", "skuId": "sku-012", "zone": "fulfillment", "position": "F-02", "inboundDate": "2024-11-15", "lastMoveDate": "2025-01-20", "qty": 70,  "status": "dead_stock" }
+]

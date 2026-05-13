@@ -28,7 +28,7 @@ export function Header() {
   }).format(new Date())
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 backdrop-blur-md">
       <div>
         <h1 className="text-lg font-semibold tracking-tight text-slate-900">
           {getPageTitle(pathname)}
@@ -37,7 +37,9 @@ export function Header() {
           Operasional gudang hybrid warehouse
         </p>
       </div>
-      <div className="text-sm font-medium text-slate-500">{currentDate}</div>
+      <div className="rounded-lg border border-slate-200/60 bg-white/60 px-3 py-1.5 text-sm font-medium text-slate-500 backdrop-blur-sm">
+        {currentDate}
+      </div>
     </header>
   )
 }

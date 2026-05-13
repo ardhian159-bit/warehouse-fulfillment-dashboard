@@ -12,6 +12,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 15350000,
+    "minimumBillingApplied": false,
     "status": "draft"
   },
   {
@@ -27,6 +28,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 22800000,
+    "minimumBillingApplied": false,
     "status": "sent"
   },
   {
@@ -42,6 +44,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 21155000,
+    "minimumBillingApplied": false,
     "status": "draft"
   },
   {
@@ -57,6 +60,7 @@
     "withdrawalFee": 5000,
     "deadStockFee": 0,
     "totalFee": 6990000,
+    "minimumBillingApplied": false,
     "status": "draft"
   },
   {
@@ -72,6 +76,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 4560000,
+    "minimumBillingApplied": false,
     "status": "paid"
   },
   {
@@ -87,6 +92,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 15130000,
+    "minimumBillingApplied": false,
     "status": "paid"
   },
   {
@@ -102,6 +108,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 20250000,
+    "minimumBillingApplied": false,
     "status": "paid"
   },
   {
@@ -117,6 +124,7 @@
     "withdrawalFee": 0,
     "deadStockFee": 0,
     "totalFee": 6570000,
+    "minimumBillingApplied": false,
     "status": "paid"
   }
 ]

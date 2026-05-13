@@ -18,3 +18,18 @@ export function formatNumber(value: number): string {
     maximumFractionDigits: 0,
   }).format(value)
 }
+
+export function formatShortRupiah(amount: number): string {
+  return `Rp ${new Intl.NumberFormat("id-ID", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(amount / 1_000_000)}jt`
+}
+
+export function formatDate(date: string): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date))
+}

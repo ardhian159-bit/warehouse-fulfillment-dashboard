@@ -4,13 +4,19 @@ import { useMemo, useState } from "react"
 import { CheckSquare, Map, Warehouse } from "lucide-react"
 
 import clientsData from "@/data/mock/clients.json"
+import palletsData from "@/data/mock/pallets.json"
 import skusData from "@/data/mock/skus.json"
+import warehouseData from "@/data/mock/warehouse.json"
+import { diffDays, DEAD_STOCK_PENALTY_DAYS, DEAD_STOCK_WARNING_DAYS } from "@/lib/billing-engine"
 import { cn, formatNumber } from "@/lib/utils"
-import type { Client, ClientType, SKU } from "@/types"
+import type { Client, ClientType, Pallet, SKU, WarehouseConfig } from "@/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const clients: Client[] = clientsData as Client[]
 const skus: SKU[] = skusData as SKU[]
+const realPallets: Pallet[] = palletsData as Pallet[]
+const warehouseConfig = warehouseData as WarehouseConfig
+const BILLING_DATE = "2025-05-10"
 
 type PalletStatus = "kosong" | "terisi" | "penuh" | "dead_stock"
 
@@ -23,6 +29,7 @@ interface PalletCell {
   clientName?: string
   skuName?: string
   qty?: number
+  daysStored?: number
 }
 
 interface HoverState {
@@ -69,11 +76,39 @@ function createZoneCells(
   clientPool: Client[],
   skuPool: SKU[]
 ): PalletCell[] {
+  const clientLookup = new globalThis.Map(clientPool.map((c) => [c.id, c]))
+  const skuLookup = new globalThis.Map(skuPool.map((s) => [s.id, s]))
+  const zoneType = zone.zone === "Area Sewa Space" ? "space" : "fulfillment"
+
+  // Map real pallet data into the first N cells of this zone
+  const zonePallets = realPallets.filter((p) => p.zone === zoneType)
+  const realCells: PalletCell[] = zonePallets.map((p, index) => {
+    const days = diffDays(p.lastMoveDate, BILLING_DATE)
+    const row = Math.floor(index / 10) + 1
+    const col = (index % 10) + 1
+    let status: PalletStatus = "terisi"
+    if (days > DEAD_STOCK_PENALTY_DAYS) status = "dead_stock"
+    else if (p.qty > 150) status = "penuh"
+
+    return {
+      id: p.position,
+      zone: zone.zone,
+      row,
+      col,
+      status,
+      clientName: clientLookup.get(p.clientId)?.name,
+      skuName: skuLookup.get(p.skuId)?.name,
+      qty: p.qty,
+      daysStored: days,
+    }
+  })
+
+  // Fill remaining grid cells with generated data to reach 70 cells total
+  const remaining = 70 - realCells.length
   const statuses: PalletStatus[] = [
-    ...Array.from({ length: zone.statusCounts.terisi }, () => "terisi" as const),
+    ...Array.from({ length: Math.max(0, zone.statusCounts.terisi - zonePallets.filter((p) => diffDays(p.lastMoveDate, BILLING_DATE) <= DEAD_STOCK_PENALTY_DAYS && p.qty <= 150).length) }, () => "terisi" as const),
     ...Array.from({ length: zone.statusCounts.penuh }, () => "penuh" as const),
     ...Array.from({ length: zone.statusCounts.kosong }, () => "kosong" as const),
-    ...Array.from({ length: zone.statusCounts.dead_stock }, () => "dead_stock" as const),
   ]
 
   const zoneClients = clientPool.filter((client) =>
@@ -83,59 +118,60 @@ function createZoneCells(
     zoneClients.some((client) => client.id === sku.clientId)
   )
 
-  return Array.from({ length: 70 }, (_, index) => {
+  const generatedCells: PalletCell[] = Array.from({ length: remaining }, (_, i) => {
+    const index = realCells.length + i
     const row = Math.floor(index / 10) + 1
     const col = (index % 10) + 1
-    const status = statuses[index]
-    const client = zoneClients[index % zoneClients.length]
-    const clientSkus = zoneSkus.filter((sku) => sku.clientId === client.id)
-    const sku = clientSkus[(row + col + index) % clientSkus.length] ?? zoneSkus[index % zoneSkus.length]
+    const status = statuses[i % statuses.length] ?? "kosong"
+    const client = zoneClients[i % zoneClients.length]
+    const clientSkus = zoneSkus.filter((sku) => sku.clientId === client?.id)
+    const sku = clientSkus[(row + col + i) % clientSkus.length] ?? zoneSkus[i % zoneSkus.length]
     const baseQty = sku?.stockQty ?? 0
     const qty = status === "penuh" ? Math.max(80, Math.round(baseQty * 0.08)) : Math.max(24, Math.round(baseQty * 0.04))
 
     return {
-      id: `${String.fromCharCode(65 + row - 1)}-${String(col).padStart(2, "0")}`,
+      id: `gen-${String.fromCharCode(65 + row - 1)}-${String(col).padStart(2, "0")}`,
       zone: zone.zone,
       row,
       col,
       status,
-      clientName: status === "kosong" ? undefined : client.name,
+      clientName: status === "kosong" ? undefined : client?.name,
       skuName: status === "kosong" ? undefined : sku?.name,
       qty: status === "kosong" ? undefined : qty,
     }
   })
+
+  return [...realCells, ...generatedCells]
 }
 
 function getCellClassName(status: PalletStatus): string {
   if (status === "terisi") {
-    return "border border-green-500 bg-green-400"
+    return "border border-emerald-400/60 bg-emerald-400 shadow-sm shadow-emerald-400/20"
   }
 
   if (status === "penuh") {
-    return "border border-red-600 bg-red-500"
+    return "border border-rose-500/60 bg-rose-500 shadow-sm shadow-rose-500/20"
   }
 
   if (status === "dead_stock") {
-    return "border border-orange-600 bg-orange-500"
+    return "border border-orange-500/60 bg-orange-500 shadow-sm shadow-orange-500/20"
   }
 
-  return "border border-slate-200 bg-slate-100"
+  return "border border-slate-200/80 bg-slate-100"
 }
 
 function getTooltipStatusClass(status: PalletStatus): string {
-  if (status === "terisi") {
-    return "text-green-700"
-  }
-
-  if (status === "penuh") {
-    return "text-red-700"
-  }
-
-  if (status === "dead_stock") {
-    return "text-orange-700"
-  }
-
+  if (status === "terisi") return "text-emerald-700"
+  if (status === "penuh") return "text-rose-700"
+  if (status === "dead_stock") return "text-orange-700"
   return "text-slate-600"
+}
+
+function getStatusDotClass(status: PalletStatus): string {
+  if (status === "terisi") return "bg-emerald-500"
+  if (status === "penuh") return "bg-rose-500"
+  if (status === "dead_stock") return "bg-orange-500"
+  return "bg-slate-400"
 }
 
 export default function WarehousePage() {
@@ -163,11 +199,21 @@ export default function WarehousePage() {
   const emptyCount = palletCells.filter((cell) => cell.status === "kosong").length
   const occupancyPercentage = totalCells > 0 ? (occupancyCount / totalCells) * 100 : 0
 
+  const summaryCards = [
+    { label: "Total Kapasitas", value: `${formatNumber(warehouseConfig.effectiveAreaM2)} m²`, icon: Warehouse, iconClass: "from-blue-50 to-blue-100 text-blue-700", accent: "border-l-blue-500" },
+    { label: "Terpakai", value: `${formatNumber(occupiedCount)} sel`, icon: Map, iconClass: "from-emerald-50 to-emerald-100 text-emerald-700", accent: "border-l-emerald-500" },
+    { label: "Dead Stock", value: `${formatNumber(deadStockCount)} sel`, icon: Map, iconClass: "from-red-50 to-red-100 text-red-600", accent: "border-l-red-500", valueClass: "text-red-700" },
+    { label: "Kosong", value: `${formatNumber(emptyCount)} sel`, icon: Map, iconClass: "from-emerald-50 to-emerald-100 text-emerald-700", accent: "border-l-emerald-500", valueClass: "text-emerald-700" },
+  ]
+
   return (
     <section className="space-y-6">
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in-up">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-indigo-600">Warehouse Map</p>
+          <p className="text-sm font-medium text-blue-600">
+            <span className="section-dot" />
+            Warehouse Map
+          </p>
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
             Peta Gudang
           </h2>
@@ -182,15 +228,15 @@ export default function WarehousePage() {
             Kosong
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="size-3 rounded-sm bg-green-400" />
+            <span className="size-3 rounded-sm bg-emerald-400 shadow-sm shadow-emerald-400/30" />
             Terisi
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="size-3 rounded-sm bg-red-500" />
+            <span className="size-3 rounded-sm bg-rose-500 shadow-sm shadow-rose-500/30" />
             Penuh
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="size-3 rounded-sm bg-orange-500" />
+            <span className="size-3 rounded-sm bg-orange-500 shadow-sm shadow-orange-500/30" />
             Dead Stock
           </div>
         </div>
@@ -200,7 +246,7 @@ export default function WarehousePage() {
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "24px",
+          gap: "20px",
         }}
       >
         {groupedZones.map((zone) => {
@@ -214,13 +260,13 @@ export default function WarehousePage() {
           return (
             <Card
               key={zone.zone}
-              className="border border-slate-200 bg-white shadow-none ring-0"
+              className="card-glass animate-fade-in-up"
               style={{ overflow: "visible" }}
             >
-              <CardHeader className="border-b border-slate-100">
+              <CardHeader className="border-b border-slate-100/80">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex size-5 items-center justify-center rounded border border-slate-300 bg-white text-slate-400">
+                    <span className="mt-0.5 inline-flex size-5 items-center justify-center rounded border border-slate-300/60 bg-white text-slate-400">
                       <CheckSquare className="size-3.5" />
                     </span>
                     <div className="space-y-1">
@@ -230,7 +276,7 @@ export default function WarehousePage() {
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex size-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                  <span className="inline-flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-600">
                     <Warehouse className="size-4" />
                   </span>
                 </div>
@@ -253,7 +299,7 @@ export default function WarehousePage() {
                         key={`${zone.zone}-${cell.id}`}
                         type="button"
                         className={cn(
-                          "relative cursor-pointer rounded-md transition-transform duration-150 hover:scale-[1.03]",
+                          "relative cursor-pointer rounded-md transition-all duration-150 hover:scale-105 hover:brightness-110",
                           getCellClassName(cell.status)
                         )}
                         style={{ width: "40px", height: "40px" }}
@@ -276,16 +322,19 @@ export default function WarehousePage() {
 
                   {hoveredCell && hoveredCell.zone === zone.zone ? (
                     <div
-                      className="pointer-events-none absolute z-20 w-64 -translate-x-1/2 -translate-y-full rounded-xl border border-slate-200 bg-white p-4 shadow-lg"
+                      className="pointer-events-none absolute z-20 w-64 -translate-x-1/2 -translate-y-full rounded-xl border border-slate-200/60 bg-white/95 p-4 shadow-lg backdrop-blur-md"
                       style={{
                         left: hoveredCell.left,
                         top: hoveredCell.top,
                       }}
                     >
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {hoveredCell.cell.id}
-                        </p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className={cn("size-2 rounded-full", getStatusDotClass(hoveredCell.cell.status))} />
+                          <p className="text-sm font-semibold text-slate-900">
+                            {hoveredCell.cell.id}
+                          </p>
+                        </div>
                         <p
                           className={cn(
                             "text-sm font-medium",
@@ -309,16 +358,22 @@ export default function WarehousePage() {
                             Qty: {formatNumber(hoveredCell.cell.qty)}
                           </p>
                         ) : null}
+                        {hoveredCell.cell.daysStored != null ? (
+                          <p className={cn("text-sm font-medium", hoveredCell.cell.daysStored > DEAD_STOCK_PENALTY_DAYS ? "text-red-600" : hoveredCell.cell.daysStored > DEAD_STOCK_WARNING_DAYS ? "text-amber-600" : "text-slate-500")}>
+                            {hoveredCell.cell.daysStored} hari tersimpan
+                            {hoveredCell.cell.daysStored > DEAD_STOCK_PENALTY_DAYS ? " · 2× tarif" : hoveredCell.cell.daysStored > DEAD_STOCK_WARNING_DAYS ? " · warning" : ""}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                   ) : null}
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-600">
-                  <span>✓ {zoneCounts.terisi}</span>
-                  <span>🔴 {zoneCounts.penuh}</span>
-                  <span>□ {zoneCounts.kosong}</span>
-                  <span>🟠 {zoneCounts.dead_stock}</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-emerald-400" /> {zoneCounts.terisi}</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-rose-500" /> {zoneCounts.penuh}</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-300" /> {zoneCounts.kosong}</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-orange-500" /> {zoneCounts.dead_stock}</span>
                 </div>
               </CardContent>
             </Card>
@@ -326,67 +381,33 @@ export default function WarehousePage() {
         })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-4">
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700">
-              <Warehouse className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-slate-500">Total Kapasitas</p>
-              <p className="text-2xl font-semibold tracking-tight text-slate-900">
-                720 m²
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-green-50 text-green-700">
-              <Map className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-slate-500">Terpakai</p>
-              <p className="text-2xl font-semibold tracking-tight text-slate-900">
-                {formatNumber(occupiedCount)} sel
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-red-50 text-red-700">
-              <Map className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-slate-500">Dead Stock</p>
-              <p className="text-2xl font-semibold tracking-tight text-red-700">
-                {formatNumber(deadStockCount)} sel
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 bg-white shadow-none ring-0">
-          <CardContent className="flex items-start gap-4 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-              <Map className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-slate-500">Kosong</p>
-              <p className="text-2xl font-semibold tracking-tight text-emerald-700">
-                {formatNumber(emptyCount)} sel
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-5 xl:grid-cols-4">
+        {summaryCards.map((item, index) => {
+          const Icon = item.icon
+          return (
+            <Card key={item.label} className={`card-glass card-hover animate-fade-in-up border-l-4 ${item.accent} stagger-${index + 1}`}>
+              <CardContent className="flex items-start gap-4 p-5">
+                <div className={`flex size-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.iconClass}`}>
+                  <Icon className="size-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-500">{item.label}</p>
+                  <p className={`text-2xl font-semibold tracking-tight ${item.valueClass ?? "text-slate-900"}`}>
+                    {item.value}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      <Card className="border border-slate-200 bg-white shadow-none ring-0">
-        <CardHeader className="border-b border-slate-100">
-          <CardTitle>Tingkat Okupansi Gudang</CardTitle>
+      <Card className="card-glass animate-fade-in-up">
+        <CardHeader className="border-b border-slate-100/80">
+          <CardTitle>
+            <span className="section-dot" />
+            Tingkat Okupansi Gudang
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-5 py-5">
           <div className="mb-3 flex items-center justify-between gap-4">
@@ -397,9 +418,9 @@ export default function WarehousePage() {
               {occupancyPercentage.toFixed(1)}%
             </span>
           </div>
-          <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+          <div className="h-3 overflow-hidden rounded-full bg-slate-200/80">
             <div
-              className="h-full rounded-full bg-indigo-600 transition-all duration-300"
+              className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-500 animate-progress-fill transition-all duration-300"
               style={{ width: `${occupancyPercentage}%` }}
             />
           </div>

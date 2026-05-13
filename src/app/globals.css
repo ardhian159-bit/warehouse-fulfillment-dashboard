@@ -128,3 +128,87 @@
     @apply font-sans;
   }
 }
+
+/* ── Design System: Animations ──────────────────────────────────────────── */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes progress-fill {
+  from {
+    width: 0%;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+}
+
+/* ── Design System: Utility Classes ─────────────────────────────────────── */
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out both;
+  }
+
+  .animate-progress-fill {
+    animation: progress-fill 0.8s ease-out both;
+  }
+
+  .animate-pulse-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+
+  .card-glass {
+    @apply border-slate-200/60 bg-white/80 shadow-sm backdrop-blur-sm;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300/80;
+  }
+
+  .section-dot {
+    @apply inline-block size-1.5 rounded-full bg-blue-600 mr-2 align-middle;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-progress-fill,
+  .animate-pulse-dot {
+    animation: none !important;
+  }
+
+  .card-hover {
+    transform: none !important;
+  }
+}

@@ -1,3 +1,5 @@
+// ── Client ────────────────────────────────────────────────────────────────────
+
 export type ClientType = 'space' | 'fulfillment' | 'hybrid'
 export type ContractType = 'reguler' | 'group'
 export type ClientStatus = 'active' | 'inactive'
@@ -15,10 +17,16 @@ export interface Client {
   ratePerM2: number
   status: ClientStatus
   joinDate: string
+  contractStart: string
+  contractEnd: string
+  minimumBilling: number
 }
+
+// ── SKU ───────────────────────────────────────────────────────────────────────
 
 export type StockStatus = 'aman' | 'menipis' | 'kritis'
 export type SkuCategory = 'buku' | 'atk' | 'modul_digital' | 'elektronik' | 'lainnya'
+export type SkuSizeCategory = 'small' | 'medium' | 'large'
 
 export interface SKU {
   id: string
@@ -31,7 +39,12 @@ export interface SKU {
   minStock: number
   status: StockStatus
   lastUpdated: string
+  weightKg: number
+  dimensionCm3: number
+  sizeCategory: SkuSizeCategory
 }
+
+// ── Transaction ───────────────────────────────────────────────────────────────
 
 export type OrderStatus = 'pending' | 'picking' | 'packing' | 'shipped' | 'cancelled'
 export type TransactionType = 'inbound' | 'outbound' | 'return' | 'withdrawal' | 'expired'
@@ -48,6 +61,10 @@ export interface Transaction {
   notes?: string
 }
 
+// ── Billing ───────────────────────────────────────────────────────────────────
+
+export type BillingStatus = 'draft' | 'sent' | 'paid'
+
 export interface BillingItem {
   id: string
   clientId: string
@@ -61,8 +78,47 @@ export interface BillingItem {
   withdrawalFee: number
   deadStockFee: number
   totalFee: number
-  status: 'draft' | 'sent' | 'paid'
+  minimumBillingApplied: boolean
+  status: BillingStatus
 }
+
+// ── Warehouse ─────────────────────────────────────────────────────────────────
+
+export type WarehouseZoneType = 'space' | 'fulfillment'
+
+export interface WarehouseZone {
+  id: string
+  name: string
+  zoneType: WarehouseZoneType
+  areaM2: number
+}
+
+export interface WarehouseConfig {
+  id: string
+  name: string
+  totalAreaM2: number
+  effectiveAreaM2: number
+  efficiencyRatio: number
+  zones: WarehouseZone[]
+}
+
+// ── Pallet ────────────────────────────────────────────────────────────────────
+
+export type PalletStatus = 'active' | 'dead_stock'
+
+export interface Pallet {
+  id: string
+  clientId: string
+  skuId: string
+  zone: WarehouseZoneType
+  position: string
+  inboundDate: string
+  lastMoveDate: string
+  qty: number
+  status: PalletStatus
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 
 export interface OperationalFlow {
   barangMasuk: number
